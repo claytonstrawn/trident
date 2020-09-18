@@ -11,9 +11,9 @@ commands:
             echo 'TRIDENT_ION_DATA=$HOME/.trident' >> $BASH_ENV
             echo 'TRIDENT_ANSWER_DATA=$HOME/answer_test_data' >> $BASH_ENV
             echo 'TRIDENT_CONFIG=$HOME/.trident/config.tri' >> $BASH_ENV
-            echo 'YT_GOLD=8dcc2fa135dfe7a62438507066527caf5cb379c1' >> $BASH_ENV
-            echo 'YT_HEAD=yt-4.0' >> $BASH_ENV
-            echo 'TRIDENT_GOLD=test-standard-sph-viz-v6' >> $BASH_ENV
+            echo 'YT_GOLD=d218647162201673e8d0bc513a16b1b3add02a47' >> $BASH_ENV
+            echo 'YT_HEAD=master' >> $BASH_ENV
+            echo 'TRIDENT_GOLD=test-standard-v7' >> $BASH_ENV
             echo 'TRIDENT_HEAD=tip' >> $BASH_ENV
 
   install-dependencies:
@@ -43,6 +43,7 @@ commands:
             pip install --upgrade wheel
             pip install --upgrade setuptools
             pip install Cython numpy
+            export MAX_BUILD_CORES=2
             if [ << parameters.yttag >> != "None" ]; then
                 if [ ! -f $YT_DIR/README.md ]; then
                     git clone --branch=${YT_HEAD} https://github.com/yt-project/yt $YT_DIR
@@ -70,7 +71,7 @@ commands:
           command: |
             source $BASH_ENV
             source $HOME/venv/bin/activate
-            git checkout ${<< parameters.tridenttag >>}
+            git checkout ${<< parameters.tridenttag >>} || git checkout $TRIDENT_HEAD
             pip install -e .[dev]
 
   configure-trident:
@@ -226,14 +227,14 @@ jobs:
 
       - restore_cache:
           name: "Restore answer tests cache."
-          key: test-results-<< parameters.tag >>-<< parameters.yttag >>-v7
+          key: test-results-<< parameters.tag >>-<< parameters.yttag >>-v9
 
       - run-tests:
           generate: 1
 
       - save_cache:
           name: "Save answer tests cache."
-          key: test-results-<< parameters.tag >>-<< parameters.yttag >>-v7
+          key: test-results-<< parameters.tag >>-<< parameters.yttag >>-v9
           paths:
             - ~/answer_test_data/test_results
 
@@ -269,30 +270,26 @@ workflows:
    normal-tests:
      jobs:
        - tests:
-           name: "Python 3.5 tests with yt gold"
-           tag: "3.5.9"
-
-       - tests:
            name: "Python 3.6 tests with yt gold"
-           tag: "3.6.10"
+           tag: "3.6.11"
 
        - tests:
            name: "Python 3.7 tests with yt gold"
-           tag: "3.7.7"
+           tag: "3.7.8"
 
        - tests:
            name: "Python 3.8 tests with yt gold"
-           tag: "3.8.2"
+           tag: "3.8.5"
 
        - tests:
            name: "Python 3.8 tests with yt tip"
-           tag: "3.8.2"
+           tag: "3.8.5"
            yttag: "YT_HEAD"
            coverage: 1
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.8.2"
+           tag: "3.8.5"
 
    daily:
      triggers:
@@ -305,10 +302,10 @@ workflows:
      jobs:
        - tests:
            name: "Python 3.8 tests with yt tip"
-           tag: "3.8.2"
+           tag: "3.8.5"
            yttag: "YT_HEAD"
            coverage: 0
 
        - docs-test:
            name: "Test docs build"
-           tag: "3.8.2"
+           tag: "3.8.5"
